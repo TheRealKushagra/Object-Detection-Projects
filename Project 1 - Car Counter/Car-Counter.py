@@ -28,8 +28,18 @@ mask = cv2.imread("Project 1 - Car Counter/mask.png")
 #tracking
 tracker = Sort(max_age=20, min_hits=3, iou_threshold=0.3)
 
+limits = [500, 450, 1000, 450]
+totalCount = []
+
+
 cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Image", 960, 540)
+
+#def mousePoints(event, x, y, flags, params):
+#    if event == cv2.EVENT_LBUTTONDOWN:
+ #       print(x, y)
+#cv2.namedWindow("Image")
+#cv2.setMouseCallback("Image", mousePoints)
 
 while True:
   success, img = cap.read()
@@ -59,21 +69,31 @@ while True:
       currentClass = classNames[cls]
       if (currentClass == "car" or currentClass == "bus" or currentClass == "truck" or currentClass == "motorbike") and conf>0.3:
         #cvzone.putTextRect(img, f'{currentClass} {conf}', (max(0,x1), max(35,y1)), offset=3)
-        cvzone.cornerRect(img,(x1,y1,w,h), l=12, rt=5)
+        #cvzone.cornerRect(img,(x1,y1,w,h), l=12, rt=5)
         currentArray = np.array([x1, y1, x2, y2, conf])
         detections = np.vstack((detections, currentArray))
   
   resultsTracker = tracker.update(detections)
+  cv2.line(img, (limits[0], limits[1]), (limits[2], limits[3]), (0,0,255), 5)
+
 
   for result in resultsTracker:
     x1,y1,x2,y2,id = result
-    print(result)
     x1,y1,x2,y2 = int(x1), int(y1) ,int(x2), int(y2)
+    print(result)
     w,h = x2-x1, y2-y1
     cvzone.cornerRect(img,(x1,y1,w,h), l=12, rt=2, colorR=(255,0,0))
     cvzone.putTextRect(img, f' {int(id)}', (max(0,x1), max(35,y1)), offset=3)
 
+    cx, cy = x1+w//2, y1+h//2
+    cv2.circle(img, (cx,cy), 5, (255,0,255), cv2.FILLED)
+
+    if limits[0] < cx < limits[2] and limits[1]-20 < cy < limits[1]+20:
+      if totalCount.count(id) == 0:
+        totalCount.append(id)
+
+  cvzone.putTextRect(img, f' Count:  {len(totalCount)}', (50,50))
 
   cv2.imshow("Image", img)
-  cv2.imshow("ImageRegion", imgRegion)
+  #cv2.imshow("ImageRegion", imgRegion)
   cv2.waitKey(1)
