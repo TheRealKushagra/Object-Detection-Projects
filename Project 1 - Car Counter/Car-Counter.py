@@ -2,6 +2,7 @@ from ultralytics import YOLO
 import cv2
 import cvzone
 import math
+from sort import *
 
 
 cap = cv2.VideoCapture("Videos/C1.mp4") #for video
@@ -24,6 +25,9 @@ classNames = [
 
 mask = cv2.imread("Project 1 - Car Counter/mask.png")
 
+#tracking
+tracker = Sort(max_age=20, min_hits=3, iou_threshold=0.3)
+
 cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Image", 960, 540)
 
@@ -37,6 +41,8 @@ while True:
   imgRegion = cv2.bitwise_and(img, mask)
 
   results = model(imgRegion, stream = True)
+
+  detections = np.empty((0,5))
 
   for r in results: #extracting coordinates
     boxes = r.boxes
@@ -52,10 +58,20 @@ while True:
 
       currentClass = classNames[cls]
       if (currentClass == "car" or currentClass == "bus" or currentClass == "truck" or currentClass == "motorbike") and conf>0.3:
-        cvzone.putTextRect(img, f'{currentClass} {conf}', (max(0,x1), max(35,y1)), offset=3)
-        cvzone.cornerRect(img,(x1,y1,w,h), l=12)
-      
-      
+        #cvzone.putTextRect(img, f'{currentClass} {conf}', (max(0,x1), max(35,y1)), offset=3)
+        cvzone.cornerRect(img,(x1,y1,w,h), l=12, rt=5)
+        currentArray = np.array([x1, y1, x2, y2, conf])
+        detections = np.vstack((detections, currentArray))
+  
+  resultsTracker = tracker.update(detections)
+
+  for result in resultsTracker:
+    x1,y1,x2,y2,id = result
+    print(result)
+    x1,y1,x2,y2 = int(x1), int(y1) ,int(x2), int(y2)
+    w,h = x2-x1, y2-y1
+    cvzone.cornerRect(img,(x1,y1,w,h), l=12, rt=2, colorR=(255,0,0))
+    cvzone.putTextRect(img, f' {int(id)}', (max(0,x1), max(35,y1)), offset=3)
 
 
   cv2.imshow("Image", img)
