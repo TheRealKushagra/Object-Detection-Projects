@@ -4,7 +4,7 @@ import cvzone
 import math
 
 
-cap = cv2.VideoCapture("Videos/traffic.mp4") #for video
+cap = cv2.VideoCapture("Videos/C1.mp4") #for video
 
 
 model = YOLO('../YOLO-Weights/yolov8n.pt')
@@ -37,13 +37,17 @@ while True:
       x1,y1,x2,y2 = int(x1), int(y1) ,int(x2), int(y2)
       #cv2.rectangle(img, (x1,y1), (x2,y2), (255,0,255), 3)
       w,h = x2-x1, y2-y1
-      cvzone.cornerRect(img,(x1,y1,w,h))
 
       conf = math.ceil((box.conf[0]*100))/100
 
       cls = int(box.cls[0])
+
+      currentClass = classNames[cls]
+      if currentClass == "car" or currentClass == "bus" or currentClass == "truck" or currentClass == "motorbike" and conf>0.3:
+        cvzone.putTextRect(img, f'{currentClass} {conf}', (max(0,x1), max(35,y1)), offset=3)
+        cvzone.cornerRect(img,(x1,y1,w,h), l=12)
       
-      cvzone.putTextRect(img, f'{classNames[cls]} {conf}', (max(0,x1), max(35,y1)))
+      
 
 
   cv2.imshow("Image", img)
