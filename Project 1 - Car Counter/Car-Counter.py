@@ -22,14 +22,22 @@ classNames = [
     "teddy bear", "hair drier", "toothbrush"
 ]
 
+mask = cv2.imread("Project 1 - Car Counter/mask.png")
+
 cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Image", 960, 540)
 
 while True:
   success, img = cap.read()
+
   if not success:
     break
-  results = model(img, stream = True)
+
+  img = cv2.resize(img, (960, 540))
+  imgRegion = cv2.bitwise_and(img, mask)
+
+  results = model(imgRegion, stream = True)
+
   for r in results: #extracting coordinates
     boxes = r.boxes
     for box in boxes:
@@ -43,7 +51,7 @@ while True:
       cls = int(box.cls[0])
 
       currentClass = classNames[cls]
-      if currentClass == "car" or currentClass == "bus" or currentClass == "truck" or currentClass == "motorbike" and conf>0.3:
+      if (currentClass == "car" or currentClass == "bus" or currentClass == "truck" or currentClass == "motorbike") and conf>0.3:
         cvzone.putTextRect(img, f'{currentClass} {conf}', (max(0,x1), max(35,y1)), offset=3)
         cvzone.cornerRect(img,(x1,y1,w,h), l=12)
       
@@ -51,4 +59,5 @@ while True:
 
 
   cv2.imshow("Image", img)
+  cv2.imshow("ImageRegion", imgRegion)
   cv2.waitKey(1)
