@@ -1,0 +1,8 @@
+venv310/
+YOLO-Weights/
+Videos/
+
+__pycache__/
+*.pyc
+*.pt
+*.mp4
